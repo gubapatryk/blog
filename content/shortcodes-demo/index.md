@@ -15,10 +15,7 @@ your posts more exciting.
 Here are some examples:
 
 
-{% set image = resize_image(path="assets/fem.png", width=240, height=240) %}
-<a href="{{ get_url(path=asset) }}" target="_blank">
-    <img src="{{ image.url }}" />
-</a>
+{{ resize_image(path="assets/fem.png", width=320, height=320, op="fill") }}
 
 
 # GIF-Suport
