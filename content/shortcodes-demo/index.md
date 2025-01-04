@@ -12,7 +12,7 @@ your posts more exciting.
 
 <!-- more -->
 
-Another test?
+Another test
 
 {{ responsive(src="assets/fem.png", width=320, height=320, alt="noimage", caption="fem visualization") }}
 
