@@ -15,7 +15,7 @@ your posts more exciting.
 Here are some examples:
 
 
-{{ resize_image(path="assets/fem.png", width=320, height=320, op="fill") }}
+{{ responsive(src="assets/fem.png", width=320, height=320, caption="fem visualization") }}
 
 
 # GIF-Suport
