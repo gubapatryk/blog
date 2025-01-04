@@ -16,3 +16,5 @@ jobs:
       uses: shalzz/zola-deploy-action@v0.19.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_HOSTNAME: patryk.guba.pl
+    
