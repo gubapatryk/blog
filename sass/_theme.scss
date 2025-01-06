@@ -103,7 +103,7 @@ a[itemprop="url"]:hover {
 
 a[href*="://"]::after,
 a[rel*="external"] {
-  content: " " url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20class='i-external'%20viewBox='0%200%2032%2032'%20width='14'%20height='14'%20fill='none'%20stroke='%23ff9800'%20stroke-linecap='round'%20stroke-linejoin='round'%20stroke-width='9.38%'%3E%3Cpath%20d='M14%209%20L3%209%203%2029%2023%2029%2023%2018%20M18%204%20L28%204%2028%2014%20M28%204%20L14%2018'/%3E%3C/svg%3E");
+  content: " " url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpolygon%20fill%3D%22%23888%22%20points%3D%227%207%2015.586%207%205.293%2017.293%206.707%2018.707%2017%208.414%2017%2017%2019%2017%2019%205%207%205%207%207%22%2F%3E%3C%2Fsvg%3E");
 }
 
 figure a[href*="://"]::after,

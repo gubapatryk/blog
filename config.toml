@@ -29,7 +29,7 @@ after_dark_menu = [
     {url = "$BASE_URL", name = "Home"},
     {url = "$BASE_URL/tags", name = "Tags"},
 ]
-after_dark_title = "Welcome to my website, where I publish posts about stuff I build or find interesting. Contact: [surname]patryk@gmail.com"
+after_dark_title = "Patryk Guba's blog&#10;&#13;&#10;&#13;Contact: [surname]patryk@gmail.com"
 
 # Nicer codeblocks with copy to clipboard 
 codeblock = true
