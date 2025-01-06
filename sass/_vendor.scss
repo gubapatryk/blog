@@ -250,6 +250,13 @@ a:hover {
   margin-top: 20px;
 }
 
+.hack header:after {
+  border-bottom: 1px solid #ccc;
+  position: absolute;
+  bottom: 10px;
+  left: 0
+}
+
 .hack blockquote,
 .hack h1,
 .hack ol,
@@ -268,12 +275,6 @@ a:hover {
   overflow: hidden
 }
 
-.hack h1:after {
-  border-bottom: 1px solid #ccc;
-  position: absolute;
-  bottom: 10px;
-  left: 0
-}
 
 .hack h1+* {
   margin-top: 0
@@ -301,7 +302,7 @@ a:hover {
 }
 
 .hack h3:before {
-  content: "### "
+  content: " "
 }
 
 .hack h4:before {
