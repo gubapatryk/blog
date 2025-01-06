@@ -1,11 +1,11 @@
 base_url = "https://patryk.guba.pl"
 compile_sass = true
-title = "after-dark theme"
-description = "A robust, elegant dark theme"
+title = "Patryk Guba"
+description = "Tech posts you wouldn't find anywhere else!"
 generate_feeds = true
 
 taxonomies = [
-    {name = "categories", feed = true},
+    {name = "categories", feed = false},
     {name = "tags", feed = true},
 ]
 
@@ -24,13 +24,12 @@ highlight_theme = "one-dark"
 index_format = "elasticlunr_json"
 
 [extra]
-author = "John Doe"
+author = "Patryk Guba"
 after_dark_menu = [
     {url = "$BASE_URL", name = "Home"},
-    {url = "$BASE_URL/categories", name = "Categories"},
     {url = "$BASE_URL/tags", name = "Tags"},
 ]
-after_dark_title = "My Example Site"
+after_dark_title = "Welcome to my website, where I publish posts about stuff I build or find interesting. Contact: [surname]patryk@gmail.com"
 
 # Nicer codeblocks with copy to clipboard 
 codeblock = true

@@ -4,7 +4,7 @@ date = 2017-09-24
 
 [taxonomies]
 categories = ["demo"]
-tags = ["code", "example"]
+tags = ["code", "example", "rust"]
 +++
 
 Have code snippets complete with **clipboard functionality** and **fancy
