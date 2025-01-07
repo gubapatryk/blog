@@ -55,14 +55,15 @@ pre code {
 
 a {
   cursor: pointer;
-  color: #888;
+  color: #ff9800;
   text-decoration: none;
-  border-bottom: 1px solid #888
+  border-bottom: 1px solid #ff9800;
 }
 
 a:hover {
   background-color: #000;
-  color: #888
+  color: #888;
+  border-bottom: 1px solid #888;
 }
 
 .grid {
@@ -250,7 +251,7 @@ a:hover {
   margin-top: 20px;
 }
 
-#main-header {
+#main-header:after {
   border-bottom: 1px solid #ccc;
   position: absolute;
   bottom: 10px;
