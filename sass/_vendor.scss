@@ -251,11 +251,10 @@ a:hover {
   margin-top: 20px;
 }
 
-#main-header:after {
+#main-header {
   border-bottom: 1px solid #ccc;
-  position: absolute;
-  bottom: 10px;
-  left: 0
+  margin-bottom: 30px;
+  padding-bottom: 10px;
 }
 
 .hack blockquote,

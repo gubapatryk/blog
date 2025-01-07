@@ -9,13 +9,13 @@ tags = ["code","blog","zola","github actions","webdev"]
 
 Hi, this is my first post on this blog I've just created, so I wanted to start with describing the process of how to create similar website.
 <!-- more -->
-In the past, I used to host my website on Raspberry Pi connected via home network. It was a lot of fun, but also it required some effort to keep the server running smoothly. On the other hand, GitHub Pages are free and I really like all types of CI/CD automations like GitHub Actions, so it sounds like a good alternative to try. Also, while GitHub Pages provide you free domain as *username.***github.io**, it's also possible to add your own custom domain for your website, so your website can become really yours!
+In the past, I used to host my website on Raspberry Pi connected via home network. It was a lot of fun, but also it required some effort to keep the server running smoothly. On the other hand, GitHub Pages are free and I really like all types of CI/CD automations like GitHub Actions, so it sounds like a good alternative to try. Also, while GitHub Pages provide you free domain as **username.github.io**, it's also possible to add your own custom domain for your website, so your website can become really yours!
 
 To start, clone (or fork) Zola repository [here](https://github.com/getzola/zola) to create your own Zola repository that will be used to compile to a website. You can also choose one of the [themes](https://www.getzola.org/themes/) to customize your website.
 
-Next, configure GitHub Action for deployment. You can use [shalzz/zola-deploy-action](https://github.com/shalzz/zola-deploy-action) action that will take your code from your Zola website repository, create automatically seperate branch _gh-pages_ with compiled website code and deploy code from this branch to your GitHub Page.
+Next, configure GitHub Action for deployment. You can use [shalzz/zola-deploy-action](https://github.com/shalzz/zola-deploy-action) action that will take your code from your Zola website repository, create automatically seperate branch **gh-pages** with compiled website code and deploy code from this branch to your GitHub Page.
 
-To use this GitHub Action, create a YAML file with content below in your Zola repository in _.github/workflows_ directory. You can choose any filename ending in *.yml* or *.yaml* extension.
+To use this GitHub Action, create a YAML file with content below in your Zola repository in **.github/workflows** directory. You can choose any filename ending in **.yml** or **.yaml** extension.
 
 
 ```yaml
