@@ -40,8 +40,9 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-**secrets.GITHUB_TOKEN** should be provided by GitHub without any additional configuration as long as you are the owner of you Zola website repository. To add your custom domain, add file named *CNAME* containing your custom domain name into *static* directory in your repository. Then go to repository Settings, and then in section Code and automation choose Pages where you can add your domain (it will require to add some DNS records in your domain provider console).
-{{ responsive(src="assets/zola-github-blog/githubsettings.png", width=720, height=120, alt="GitHub settings image", caption="Custom domain settings in GitHub repository") }}
+**secrets.GITHUB_TOKEN** should be provided by GitHub without any additional configuration as long as you are the owner of you Zola website repository. To add your custom domain, add file named **CNAME** containing your custom domain name into **static** directory in your repository. Then go to repository Settings, and then in section Code and automation choose Pages where you can add your domain (it will require to add some DNS records in your domain provider console).
+
+{{ responsive(src="assets/githubsettings.png", width=720, height=120, alt="GitHub settings image", caption="Custom domain settings in GitHub repository") }}
 
 To redirect from apex domain to subdomain I used this nginx script:
 
