@@ -1,6 +1,6 @@
 +++
 title = "Shortcodes cheatsheet"
-date = 2025-01-07
+date = 2025-01-05
 
 [taxonomies]
 categories = ["meta"]
