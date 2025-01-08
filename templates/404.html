@@ -2,7 +2,7 @@
 {% block content %}
 <main style="text-align: center;">
   <h1>404 - NOT FOUND</h1>
-  <p>Page not found</p>
+  {{ gif(sources=["assets/tiny_internet.mp4"], width=100)}}
   <p>Maybe try the <a href="{{ config.base_url | safe }}">homepage</a>?</p>
 </main>
 {% endblock content %}
