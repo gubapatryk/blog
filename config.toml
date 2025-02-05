@@ -6,6 +6,7 @@ generate_feeds = true
 
 taxonomies = [
     {name = "categories", feed = false},
+    {name = "websites", feed = false},
     {name = "tags", feed = true},
 ]
 
