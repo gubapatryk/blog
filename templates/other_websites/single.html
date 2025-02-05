@@ -1,0 +1,13 @@
+{% extends "index.html" %}
+
+{% block content %}
+    {% block header %}
+        {{ super() }}
+    {% endblock header %}
+
+    <h1>Check these websites!</h1>
+
+        <ul>
+            <li><a href="https://example.org/">example.org</a></li>
+        </ul>
+{% endblock content %}
