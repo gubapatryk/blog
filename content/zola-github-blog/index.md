@@ -4,6 +4,7 @@ date = 2025-01-06
 
 [taxonomies]
 categories = ["blog"]
+websites = ["patryk.guba.pl"]
 tags = ["code","blog","zola","github actions","webdev"]
 +++
 
