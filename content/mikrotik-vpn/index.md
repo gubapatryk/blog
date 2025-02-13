@@ -23,10 +23,12 @@ add common-name="example.org" name=server-cert key-size=2048 days-valid=365 subj
 sign server-cert ca=local-ca
 
 ```
-(note: using WebFig to provide subject-alt-name can alter the number of colons, make sure you have the right value here)
+(Note: using WebFig to provide subject-alt-name can alter the number of colons, make sure you have the right value here)
 
 Client certificate - it will be used for client authentication:
+
 ```bash
+
 /certificate
 add name=client-cert common-name=client.local key-size=2048 days-valid=365 key-usage=tls-client
 sign client-cert ca=local-ca
@@ -39,6 +41,7 @@ You can use WebFig to export PKCS#12 certificate file by using System > Certific
 Next, configure IPSec settings. First we create an IP Pool for VPN clients.
 
 ```bash
+
 /ip pool
 add name=ipsec-pool ranges=192.168.100.10-192.168.100.100
 ```
@@ -46,6 +49,7 @@ add name=ipsec-pool ranges=192.168.100.10-192.168.100.100
 Mode config
 
 ```bash
+
 /ip ipsec mode-config
 add name=ikev2-modecfg address-pool=ipsec-pool address-prefix-length=32 system-dns=yes
 ```
@@ -55,6 +59,7 @@ add name=ikev2-modecfg address-pool=ipsec-pool address-prefix-length=32 system-d
 IPSec profile
 
 ```bash
+
 /ip ipsec profile
 add name=ikev2-profile dh-group=modp2048 enc-algorithm=aes-256 hash-algorithm=sha256
 ```
@@ -62,6 +67,7 @@ add name=ikev2-profile dh-group=modp2048 enc-algorithm=aes-256 hash-algorithm=sh
 IPSec peer
 
 ```bash
+
 /ip ipsec peer
 add name=ikev2-peer exchange-mode=ike2 passive=yes profile=ikev2-profile send-initial-contact=no
 ```
@@ -69,6 +75,7 @@ add name=ikev2-peer exchange-mode=ike2 passive=yes profile=ikev2-profile send-in
 IPSec group
 
 ```bash
+
 /ip ipsec policy group
 add name=ikev2-group
 ```
@@ -76,6 +83,7 @@ add name=ikev2-group
 IPSec proposal
 
 ```bash
+
 /ip ipsec proposal
 add name=ikev2-proposal auth-algorithms=sha256 enc-algorithms=aes-256-cbc lifetime=1h pfs-group=modp2048
 ```
@@ -83,6 +91,7 @@ add name=ikev2-proposal auth-algorithms=sha256 enc-algorithms=aes-256-cbc lifeti
 IPSec identity
 
 ```bash
+
 /ip ipsec identity
 add auth-method=digital-signature certificate=server-cert remote-certificate=client-cert generate-policy=port-strict mode-config=ikev2-modecfg peer=ikev2-peer policy-template-group=ikev2-group match-by=certificate
 ```
@@ -90,6 +99,7 @@ add auth-method=digital-signature certificate=server-cert remote-certificate=cli
 IPSec policy
 
 ```bash
+
 /ip ipsec policy
 add group=ikev2-group template=yes dst-address=192.168.100.0/24 proposal=ikev2-proposal
 ```
@@ -98,10 +108,12 @@ add group=ikev2-group template=yes dst-address=192.168.100.0/24 proposal=ikev2-p
 After configuring IPSec setting make sure your firewall permits IPSec connections
 
 ```bash
+
 add action=accept chain=input protocol=ipsec-esp
 add action=accept chain=input dst-port=500 protocol=udp
 add action=accept chain=input dst-port=4500 protocol=udp
 ```
+(Note: make sure to set those rules with adequate priority)
 
 Router configuration should be ready, so it's time to configure client devices. To setup VPN in Ubuntu, you will need to export private key and certificate from PKCS#12 file created by Mikrotik router:
 
@@ -113,5 +125,5 @@ openssl pkcs12 -in exported-cert.p12 -out rdt.crt -nokeys
 Configuration in GUI:
 
 
-{{ responsive(src="assets/ubuntu-vpn.png", width=720, height=120, alt="Ubuntu VPN settings image", caption="VPN settings in Ubuntu Linux") }}
+{{ responsive(src="assets/ubuntu-vpn.png", width=580, height=800, alt="Ubuntu VPN settings image", caption="VPN settings in Ubuntu Linux") }}
 
