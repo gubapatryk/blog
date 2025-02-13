@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  
+  <meta name="description" content="Tech posts you wouldn&#x27;t find anywhere else!" />
+  
+  
+
+  <title>
+    
+    Creating Zola blog with GitHub Actions and custom domain
+    
+</title>
+  <link rel="alternate" type="application/atom+xml" title="Patryk Guba Atom Feed" href="https://patryk.guba.pl/atom.xml" />
+
+  
+  <link rel="stylesheet" href="https://patryk.guba.pl/site.css">
+  
+
+  
+  
+</head>
+
+<body class="hack dark main container">
+  
+    
+        
+  
+  <header class="nav-header">
+    <nav itemscope itemtype="http://schema.org/SiteNavigationElement" class="navbar">
+      <div class="nav-links">
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl">
+          <span itemprop="name">Home</span></a>
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl/tags">
+          <span itemprop="name">Tags</span></a>
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl/other-websites">
+          <span itemprop="name">Cool websites!</span></a>
+        
+      </div>
+    </nav>
+    
+    <div class="search-container">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="search-icon">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+      </svg>
+      <input type="text" id="search" placeholder="Search...">
+      <div class="search-results">
+        <div class="search-results__items"></div>
+      </div>
+    </div>
+    
+
+  </header>
+  
+  
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">Creating Zola blog with GitHub Actions and custom domain</h1>
+        <span class="muted">
+    <svg class="icon i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>2 minute read</span>
+    <svg class="icon i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2025-01-06
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>Hi, this is my first post on this blog I've just created, so I wanted to start with describing the process of how to create similar website.</p>
+<span id="continue-reading"></span>
+<p>In the past, I used to host my website on Raspberry Pi connected via home network. It was a lot of fun, but also it required some effort to keep the server running smoothly. On the other hand, GitHub Pages are free and I really like all types of CI/CD automations like GitHub Actions, so it sounds like a good alternative to try. Also, while GitHub Pages provide you free domain as <strong>username.github.io</strong>, it's also possible to add your own custom domain for your website, so your website can become really yours!</p>
+<p>To start, clone (or fork) Zola repository <a href="https://github.com/getzola/zola">here</a> to create your own Zola repository that will be used to compile to a website. You can also choose one of the <a href="https://www.getzola.org/themes/">themes</a> to customize your website.</p>
+<p>Next, configure GitHub Action for deployment. You can use <a href="https://github.com/shalzz/zola-deploy-action">shalzz/zola-deploy-action</a> action that will take your code from your Zola website repository, create automatically seperate branch <strong>gh-pages</strong> with compiled website code and deploy code from this branch to your GitHub Page.</p>
+<p>To use this GitHub Action, create a YAML file with content below in your Zola repository in <strong>.github/workflows</strong> directory. You can choose any filename ending in <strong>.yml</strong> or <strong>.yaml</strong> extension.</p>
+<pre data-lang="yaml" style="background-color:#2b303b;color:#6c7079;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">name</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">Zola on GitHub Pages
+</span><span style="color:#abb2bf;">
+</span><span style="color:#db9d63;">on</span><span style="color:#abb2bf;">: 
+</span><span style="color:#abb2bf;"> </span><span style="color:#eb6772;">push</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">  </span><span style="color:#eb6772;">branches</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">   - </span><span style="color:#9acc76;">main
+</span><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">jobs</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">  </span><span style="color:#eb6772;">build</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">name</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">Publish site
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">runs-on</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">ubuntu-latest
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">steps</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">    - </span><span style="color:#eb6772;">name</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">Checkout main
+</span><span style="color:#abb2bf;">      </span><span style="color:#eb6772;">uses</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">actions/checkout@v4
+</span><span style="color:#abb2bf;">    - </span><span style="color:#eb6772;">name</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">Build and deploy
+</span><span style="color:#abb2bf;">      </span><span style="color:#eb6772;">uses</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">shalzz/zola-deploy-action@v0.19.2
+</span><span style="color:#abb2bf;">      </span><span style="color:#eb6772;">env</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">        </span><span style="color:#eb6772;">GITHUB_TOKEN</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">${{ secrets.GITHUB_TOKEN }}
+</span></code></pre>
+<p><strong>secrets.GITHUB_TOKEN</strong> should be provided by GitHub without any additional configuration as long as you are the owner of you Zola website repository. To add your custom domain, add file named <strong>CNAME</strong> containing your custom domain name into <strong>static</strong> directory in your repository. Then go to repository Settings, and then in section Code and automation choose Pages where you can add your domain (it will require to add some DNS records in your domain provider console).</p>
+<div
+  style="width: 100%; max-width: 720%; margin: 0 auto; text-align: center;">
+  <img src="assets/githubsettings.png" alt="GitHub settings image"
+    style="max-width: 100%; height: auto; max-height: 120px; object-fit: contain; display: inline-block;">
+  
+  <div style="margin-top: 0.5em;">
+    <p style="font-style: italic;">Custom domain settings in GitHub repository</p>
+  </div>
+  
+</div>
+<p>To redirect from apex domain to subdomain I used this nginx script:</p>
+<pre data-lang="txt" style="background-color:#2b303b;color:#6c7079;" class="language-txt "><code class="language-txt" data-lang="txt"><span style="color:#abb2bf;">server {
+</span><span style="color:#abb2bf;">        server_name  .guba.pl;
+</span><span style="color:#abb2bf;">        return 301 $scheme://patryk.guba.pl$request_uri;
+</span><span style="color:#abb2bf;">}
+</span></code></pre>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by Patryk Guba
+                
+                
+                    
+                    in <a href="https://patryk.guba.pl/categories/blog/">blog</a>
+                
+                
+                    and
+                    tagged
+                    
+                        <a href="https://patryk.guba.pl/tags/code/">code</a>
+                        
+                            
+                                
+                                    ,
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/blog/">blog</a>
+                        
+                            
+                                
+                                    ,
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/zola/">zola</a>
+                        
+                            
+                                
+                                    ,
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/github-actions/">github actions</a>
+                        
+                            
+                                
+                                    and
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/webdev/">webdev</a>
+                        
+                            
+                        
+                    
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+
+  <!-- optional scripts -->
+  
+  
+  <script src="https://patryk.guba.pl/js/codeblock.js"></script>
+  
+
+  
+<!-- MathJax script for rendering LaTeX math equations -->
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [
+        ["$", "$"],
+        ["\\(", "\\)"],
+      ],
+      displayMath: [
+        ["$$", "$$"],
+        ["\\[", "\\]"],
+      ],
+    },
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+
+
+  
+<script type="text/javascript" src="https://patryk.guba.pl/elasticlunr.min.js"></script>
+<script type="text/javascript" src="https://patryk.guba.pl/js/search.js"></script>
+
+
+  
+</body>
+
+</html>
