@@ -1,7 +1,9 @@
 +++ title = "Nginx SSL with Certbot in Docker without the agonizing pain" date = 2025-02-27
 
 [taxonomies] categories = ["DevOps"] tags = ["nginx","ssl","network","docker"] +++
++++
 
+{{ responsive(src="docker-nginx.png", width=690, height=400, alt="Dockerized Nginx with SSL") }}
 Certbot makes securing websites easier, offering a straightforward solution to obtain SSL/TLS certificates from Let's Encrypt. This has become the go-to method for many to make their websites more secure and trustworthy by encrypting HTTP traffic. However, when working in a Dockerized environment, the process becomes a bit more complicated.
 
 In a standalone environment, Certbot handles entire process automatically. However, in a containerized setup, the issue is that Docker containers are isolated from each other and running [Certbot](https://hub.docker.com/r/certbot/certbot) image won't configure everything automatically. While [EFF's Certbot docs](https://eff-certbot.readthedocs.io/en/latest/install.html) suggest to generate certificates manually and place them into Nginx volume, another option is a two-phase Docker Compose deployment.
