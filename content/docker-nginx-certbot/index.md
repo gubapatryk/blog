@@ -1,6 +1,10 @@
-+++ title = "Nginx SSL with Certbot in Docker without the agonizing pain" date = 2025-02-27
++++
+title = "Nginx SSL with Certbot in Docker without the agonizing pain" 
+date = 2025-02-27
 
-[taxonomies] categories = ["DevOps"] tags = ["nginx","ssl","network","docker"]
+[taxonomies]
+categories = ["DevOps"] 
+tags = ["nginx","ssl","network","docker"]
 +++
 
 {{ responsive(src="docker-nginx.png", width=690, height=400, alt="Dockerized Nginx with SSL") }}
