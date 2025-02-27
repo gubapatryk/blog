@@ -1,11 +1,11 @@
 +++
 title = "Shortcodes cheatsheet"
 date = 2025-01-05
-
+render = false
+in_search_index = false
 [taxonomies]
 categories = ["meta"]
 tags = ["demo", "random"]
-in_search_index = false
 +++
 
 This is some meta-technical page I use to store cool shortcodes I haven't found use for in my existing blog posts (yet)
