@@ -16,7 +16,7 @@ In a standalone environment, Certbot handles entire process automatically. Howev
 
 ## First deployment - obtaining the certificate
 
-In the first phase we will create a temporary Nginx server to handle acme-challenges during certificate generation. 
+In this phase we will create a temporary Nginx server to handle acme-challenges during certificate generation. 
 
 **./nginx/templates-gencert/default.conf.template**
 ```bash
