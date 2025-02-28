@@ -7,14 +7,14 @@ categories = ["DevOps"]
 tags = ["nginx","ssl","network","docker"]
 +++
 
-Certbot makes securing websites easier, offering a straightforward solution to obtain SSL/TLS certificates from Let's Encrypt. This has become the go-to method for many to make their websites more secure and trustworthy by encrypting HTTP traffic. However, when working in a Dockerized environment, the process becomes a bit more complicated.
+Certbot makes securing websites easier, offering a straightforward solution to obtain SSL/TLS certificates from Let's Encrypt. This has become the go-to method for many to make their websites more secure and trustworthy by encrypting HTTP traffic. However, when working in a dockerized environment, the process becomes a bit more complicated.
 <!-- more -->
 {{ responsive(src="docker-nginx.png", width=690, height=400, alt="Dockerized Nginx with SSL") }}
 
-In a standalone environment, Certbot handles entire process automatically. However, in a containerized setup, the issue is that Docker containers are isolated from each other and running [Certbot](https://hub.docker.com/r/certbot/certbot) image won't configure everything automatically. While [EFF's Certbot docs](https://eff-certbot.readthedocs.io/en/latest/install.html) suggest to generate certificates manually and place them into Nginx volume, another option is a two-phase Docker Compose deployment.
+In a standalone environment, Certbot handles entire process automatically. However, in a containerized setup, the issue is that Docker containers are isolated from each other and running [Certbot](https://hub.docker.com/r/certbot/certbot) image won't configure everything automatically. While [EFF's Certbot docs](https://eff-certbot.readthedocs.io/en/latest/install.html) suggest to generate certificates manually and place them into Nginx volume, another option is a two-phase Docker Compose deployment. The first time we run our dockerized application, we generate a certificate that will be used for further deployments. In order to run nginx without the certificate during the first run, we will need a dedicated configuration file that will run only a HTTP server on port 80.
 
 
-### First phase - obtaining the certificate
+## First deployment - obtaining the certificate
 
 In the first phase we will create a temporary Nginx server to handle acme-challenges during certificate generation. 
 
@@ -96,7 +96,7 @@ server {
 }
 ```
 
-*./docker-compose.yml*
+**./docker-compose.yml**
 ```yml
 
 services:
