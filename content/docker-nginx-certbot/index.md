@@ -8,7 +8,7 @@ tags = ["nginx","ssl","network","docker"]
 +++
 
 Certbot makes securing websites easier, offering a straightforward solution to obtain SSL/TLS certificates from Let's Encrypt. This has become the go-to method for many to make their websites more secure and trustworthy by encrypting HTTP traffic. However, when working in a Dockerized environment, the process becomes a bit more complicated.
-
+<!-- more -->
 {{ responsive(src="docker-nginx.png", width=690, height=400, alt="Dockerized Nginx with SSL") }}
 
 In a standalone environment, Certbot handles entire process automatically. However, in a containerized setup, the issue is that Docker containers are isolated from each other and running [Certbot](https://hub.docker.com/r/certbot/certbot) image won't configure everything automatically. While [EFF's Certbot docs](https://eff-certbot.readthedocs.io/en/latest/install.html) suggest to generate certificates manually and place them into Nginx volume, another option is a two-phase Docker Compose deployment.
@@ -18,7 +18,7 @@ In a standalone environment, Certbot handles entire process automatically. Howev
 
 In the first phase we will create a temporary Nginx server to handle acme-challenges during certificate generation. 
 
-*./nginx/templates-gencert/default.conf.template*
+**./nginx/templates-gencert/default.conf.template**
 ```bash
 
 server {
@@ -32,7 +32,7 @@ server {
 }
 ```
 
-*./docker-compose-gencert.yml*
+**./docker-compose-gencert.yml**
 ```yml
 
 services:
@@ -61,9 +61,9 @@ services:
       - ./certbot/data:/var/www/certbot:rw
 ```
 
-By running *docker compose up* we can generate a certificate for a domain specified as *DOMAIN_NAME* in *.env* file. After successful certificate generation, we can proceed to the normal deployment.
+By running **docker compose up** we can generate a certificate for a domain specified as **DOMAIN_NAME** in **.env** file. After successful certificate generation, we can proceed to the normal deployment scripts.
 
-*/nginx/templates-gencert/default.conf.template*
+**/nginx/templates-gencert/default.conf.template**
 ```bash
 
 server {
@@ -136,7 +136,7 @@ services:
 ```
 
 
-The file tree of the entire deployment code, both for certificate generation and normal deployment, with sample Node.js app. 
+The file tree of the entire deployment code, both for certificate generation and normal deployment, with a sample Node.js app. 
 
 ```bash
 
