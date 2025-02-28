@@ -14,7 +14,7 @@ Certbot makes securing websites easier, offering a straightforward solution to o
 In a standalone environment, Certbot handles entire process automatically. However, in a containerized setup, the issue is that Docker containers are isolated from each other and running [Certbot](https://hub.docker.com/r/certbot/certbot) image won't configure everything automatically. While [EFF's Certbot docs](https://eff-certbot.readthedocs.io/en/latest/install.html) suggest to generate certificates manually and place them into Nginx volume, another option is a two-phase Docker Compose deployment. The first time we run our dockerized application, we generate a certificate that will be used for further deployments. In order to run nginx without the certificate during the first run, we will need a dedicated configuration file that will run only a HTTP server on port 80.
 
 
-## First deployment - obtaining the certificate
+### First deployment - obtaining the certificate
 
 In this phase we will create a temporary Nginx server to handle acme-challenges during certificate generation. 
 
@@ -24,7 +24,7 @@ In this phase we will create a temporary Nginx server to handle acme-challenges 
 server {
     listen [::]:80;
     listen 80;
-    server_name $DOMAIN;
+    server_name $DOMAIN_NAME;
     location ~/.well-known/acme-challenge {
         allow all;
         root /var/www/certbot;
@@ -52,7 +52,7 @@ services:
     image: certbot/certbot:latest
     depends_on:
       - nginx
-    command: >- 
+    command: > 
              certonly --reinstall --webroot --webroot-path=/var/www/certbot
              --email ${EMAIL} --agree-tos --no-eff-email
              -d ${DOMAIN_NAME}
@@ -61,9 +61,9 @@ services:
       - ./certbot/data:/var/www/certbot:rw
 ```
 
-By running **docker compose up** we can generate a certificate for a domain specified as **DOMAIN_NAME** in **.env** file. After successful certificate generation, we can proceed to the normal deployment scripts.
+By running **docker compose up** we can generate a certificate for a domain specified as **DOMAIN_NAME** environment variable (environment variables can be set using **.env** file). After successful certificate generation, we can proceed to the normal deployment scripts.
 
-**/nginx/templates-gencert/default.conf.template**
+**/nginx/templates/default.conf.template**
 ```bash
 
 server {
@@ -126,7 +126,7 @@ services:
     image: certbot/certbot:latest
     depends_on:
       - nginx
-    command: >-
+    command: >
              certonly --reinstall --webroot --webroot-path=/var/www/certbot
              --email ${EMAIL} --agree-tos --no-eff-email
              -d ${DOMAIN_NAME}
