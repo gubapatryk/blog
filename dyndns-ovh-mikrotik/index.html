@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  
+  <meta name="description" content="Tech posts you wouldn&#x27;t find anywhere else!" />
+  
+  
+
+  <title>
+    
+    Dynamic DNS for OVH with RouterOS scripts
+    
+</title>
+  <link rel="alternate" type="application/atom+xml" title="Patryk Guba Atom Feed" href="https://patryk.guba.pl/atom.xml" />
+
+  
+  <link rel="stylesheet" href="https://patryk.guba.pl/site.css">
+  
+
+  
+  
+</head>
+
+<body class="hack dark main container">
+  
+    
+        
+  
+  <header class="nav-header">
+    <nav itemscope itemtype="http://schema.org/SiteNavigationElement" class="navbar">
+      <div class="nav-links">
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl">
+          <span itemprop="name">Home</span></a>
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl/tags">
+          <span itemprop="name">Tags</span></a>
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl/other-websites">
+          <span itemprop="name">Cool websites!</span></a>
+        
+      </div>
+    </nav>
+    
+    <div class="search-container">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="search-icon">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+      </svg>
+      <input type="text" id="search" placeholder="Search...">
+      <div class="search-results">
+        <div class="search-results__items"></div>
+      </div>
+    </div>
+    
+
+  </header>
+  
+  
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">Dynamic DNS for OVH with RouterOS scripts</h1>
+        <span class="muted">
+    <svg class="icon i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>2 minute read</span>
+    <svg class="icon i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2025-01-08
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>Assigning DNS domain to dynamic public IP addresses provided by ISP can make remote access to your home network easier. In this post I will present how to configure Dynamic DNS script for OVH domain provider using RouterOS scripts.</p>
+<span id="continue-reading"></span>
+<p>Whether you’re managing a remote network, accessing wireless IoT device, or hosting a website from your home, having a reliable way to connect is essential. This is where a Dynamic DNS (DDNS) solution can make life much easier. DDNS can be provided by third party companies, but usually it's provided for free with your DNS domain bought from hosting company. In my case I use OVH APIs, that offer to update DDNS mapping by sending HTTP requests.</p>
+<p>To make DDNS work without interruptions, requests should be sent frequently 24/7 (for example every 15 minutes). This can be done by configuring server to send HTTP requests using crontab jobs, but also you can use Mikrotik router to do it using RouterOS scripts. I prefer using router for that, because if server responsible for updating DNS goes down, entire network can be lost. If router goes down, I lose the access to my network anyway :).</p>
+<p>Crontab jobs bash script. Replace <strong>LOGIN</strong> and <strong>PASSWORD</strong> variables with values provided by OVH, <strong>domainArray</strong> with a list of your desired domains and subdomains and <strong>PATH_LOG</strong> with path to log file that will store status of DDNS requests.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="font-style:italic;color:#5f697a;">#!/bin/bash
+</span><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">domainArray</span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;">(example.org, www.example.org)
+</span><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">LOGIN</span><span style="color:#adb7c9;">=</span><span style="color:#9acc76;">yourusername
+</span><span style="color:#eb6772;">PASSWORD</span><span style="color:#adb7c9;">=</span><span style="color:#9acc76;">yourpassword
+</span><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">PATH_LOG</span><span style="color:#adb7c9;">=</span><span style="color:#9acc76;">/home/user/maintenance/dynhost.log
+</span><span style="color:#abb2bf;">
+</span><span style="color:#5ebfcc;">echo </span><span style="color:#9acc76;">&quot;Run dyndns&quot; </span><span style="color:#adb7c9;">&gt;&gt; </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">PATH_LOG
+</span><span style="color:#eb6772;">date </span><span style="color:#adb7c9;">&gt;&gt; </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">PATH_LOG
+</span><span style="color:#abb2bf;">
+</span><span style="color:#cd74e8;">for</span><span style="color:#abb2bf;"> item </span><span style="color:#cd74e8;">in </span><span style="color:#abb2bf;">${</span><span style="color:#eb6772;">domainArray[*]</span><span style="color:#abb2bf;">}
+</span><span style="color:#cd74e8;">do
+</span><span style="color:#abb2bf;">        </span><span style="color:#eb6772;">UPDATE_IP</span><span style="color:#adb7c9;">=</span><span style="color:#9acc76;">false
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">        </span><span style="color:#eb6772;">HOST_IP</span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;">`</span><span style="color:#eb6772;">dig</span><span style="color:#abb2bf;"> +short $</span><span style="color:#eb6772;">item</span><span style="color:#abb2bf;">`
+</span><span style="color:#abb2bf;">        </span><span style="color:#eb6772;">CURRENT_IP</span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;">`</span><span style="color:#eb6772;">curl</span><span style="color:#abb2bf;"> ifconfig.co`
+</span><span style="color:#abb2bf;">        </span><span style="color:#eb6772;">sleep</span><span style="color:#abb2bf;"> 2
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">        </span><span style="color:#5ebfcc;">echo </span><span style="color:#9acc76;">&quot;Current domain&quot; </span><span style="color:#adb7c9;">&gt;&gt; </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">PATH_LOG
+</span><span style="color:#abb2bf;">        </span><span style="color:#5ebfcc;">echo </span><span style="color:#9acc76;">&quot;$</span><span style="color:#eb6772;">item</span><span style="color:#9acc76;">&quot; </span><span style="color:#adb7c9;">&gt;&gt; </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">PATH_LOG
+</span><span style="color:#abb2bf;">        </span><span style="color:#5ebfcc;">echo </span><span style="color:#9acc76;">&quot;Current IP&quot; </span><span style="color:#adb7c9;">&gt;&gt; </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">PATH_LOG
+</span><span style="color:#abb2bf;">        </span><span style="color:#5ebfcc;">echo </span><span style="color:#9acc76;">&quot;$</span><span style="color:#eb6772;">CURRENT_IP</span><span style="color:#9acc76;">&quot; </span><span style="color:#adb7c9;">&gt;&gt; </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">PATH_LOG
+</span><span style="color:#abb2bf;">        </span><span style="color:#5ebfcc;">echo </span><span style="color:#9acc76;">&quot;Host IP&quot; </span><span style="color:#adb7c9;">&gt;&gt; </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">PATH_LOG
+</span><span style="color:#abb2bf;">        </span><span style="color:#5ebfcc;">echo </span><span style="color:#9acc76;">&quot;$</span><span style="color:#eb6772;">HOST_IP</span><span style="color:#9acc76;">&quot; </span><span style="color:#adb7c9;">&gt;&gt; </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">PATH_LOG
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">        </span><span style="color:#cd74e8;">if </span><span style="color:#5ebfcc;">[ </span><span style="color:#eb6772;">-z </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">CURRENT_IP </span><span style="color:#5ebfcc;">] </span><span style="color:#adb7c9;">|| </span><span style="color:#5ebfcc;">[ </span><span style="color:#eb6772;">-z </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">HOST_IP </span><span style="color:#5ebfcc;">]
+</span><span style="color:#abb2bf;">        </span><span style="color:#cd74e8;">then
+</span><span style="color:#abb2bf;">                        </span><span style="color:#5ebfcc;">echo </span><span style="color:#9acc76;">&quot;No IP retrieved&quot; </span><span style="color:#adb7c9;">&gt;&gt; </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">PATH_LOG
+</span><span style="color:#abb2bf;">        </span><span style="color:#cd74e8;">else
+</span><span style="color:#abb2bf;">                        </span><span style="color:#cd74e8;">if </span><span style="color:#5ebfcc;">[ </span><span style="color:#9acc76;">&quot;$</span><span style="color:#eb6772;">HOST_IP</span><span style="color:#9acc76;">&quot; </span><span style="color:#adb7c9;">!= </span><span style="color:#9acc76;">&quot;$</span><span style="color:#eb6772;">CURRENT_IP</span><span style="color:#9acc76;">&quot; </span><span style="color:#5ebfcc;">]
+</span><span style="color:#abb2bf;">                        </span><span style="color:#cd74e8;">then
+</span><span style="color:#abb2bf;">                                        </span><span style="color:#eb6772;">RES</span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;">`</span><span style="color:#eb6772;">curl --user </span><span style="color:#9acc76;">&quot;$</span><span style="color:#eb6772;">LOGIN</span><span style="color:#9acc76;">:$</span><span style="color:#eb6772;">PASSWORD</span><span style="color:#9acc76;">&quot; &quot;https://www.ovh.com/nic/update?system=dyndns&amp;hostname=$</span><span style="color:#eb6772;">item</span><span style="color:#9acc76;">&amp;myip=$</span><span style="color:#eb6772;">CURRENT_IP</span><span style="color:#9acc76;">&quot;</span><span style="color:#abb2bf;">`
+</span><span style="color:#abb2bf;">                                        </span><span style="color:#5ebfcc;">echo </span><span style="color:#9acc76;">&quot;DynHost request result:&quot; </span><span style="color:#adb7c9;">&gt;&gt; </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">PATH_LOG
+</span><span style="color:#abb2bf;">                                        </span><span style="color:#5ebfcc;">echo </span><span style="color:#9acc76;">&quot;$</span><span style="color:#eb6772;">RES</span><span style="color:#9acc76;">&quot; </span><span style="color:#adb7c9;">&gt;&gt; </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">PATH_LOG
+</span><span style="color:#abb2bf;">                                        </span><span style="color:#5ebfcc;">echo </span><span style="color:#9acc76;">&quot;IP has changed&quot; </span><span style="color:#adb7c9;">&gt;&gt; </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">PATH_LOG
+</span><span style="color:#abb2bf;">                        </span><span style="color:#cd74e8;">else
+</span><span style="color:#abb2bf;">                                        </span><span style="color:#5ebfcc;">echo </span><span style="color:#9acc76;">&quot;IP has not changed&quot; </span><span style="color:#adb7c9;">&gt;&gt; </span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">PATH_LOG
+</span><span style="color:#abb2bf;">                        </span><span style="color:#cd74e8;">fi
+</span><span style="color:#abb2bf;">        </span><span style="color:#cd74e8;">fi
+</span><span style="color:#cd74e8;">done
+</span></code></pre>
+<p>For RouterOS you can use script provided below:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">:local</span><span style="color:#abb2bf;"> ovhddnsuser </span><span style="color:#9acc76;">&quot;yourusername&quot;
+</span><span style="color:#eb6772;">:local</span><span style="color:#abb2bf;"> ovhddnspass </span><span style="color:#9acc76;">&quot;yourpassword&quot;
+</span><span style="color:#eb6772;">:local</span><span style="color:#abb2bf;"> theinterface </span><span style="color:#9acc76;">&quot;eth1&quot;
+</span><span style="color:#eb6772;">:local</span><span style="color:#abb2bf;"> ovhddnshost </span><span style="color:#9acc76;">&quot;example.org&quot;
+</span><span style="color:#eb6772;">:local</span><span style="color:#abb2bf;"> ipddns </span><span style="color:#cd74e8;">[</span><span style="color:#abb2bf;">:resolve $</span><span style="color:#eb6772;">ovhddnshost</span><span style="color:#cd74e8;">]
+</span><span style="color:#eb6772;">:local</span><span style="color:#abb2bf;"> ipfresh </span><span style="color:#cd74e8;">[</span><span style="color:#abb2bf;"> /ip cloud get public</span><span style="color:#adb7c9;">-</span><span style="color:#abb2bf;">address </span><span style="color:#cd74e8;">]
+</span><span style="color:#eb6772;">:if</span><span style="color:#abb2bf;"> (</span><span style="color:#cd74e8;">[</span><span style="color:#abb2bf;"> :typeof $</span><span style="color:#eb6772;">ipfresh </span><span style="color:#cd74e8;">]</span><span style="color:#abb2bf;"> = nil ) </span><span style="color:#eb6772;">do</span><span style="color:#adb7c9;">=</span><span style="color:#9acc76;">{
+</span><span style="color:#9acc76;">   :log info (&quot;OVHDynDNS: NO IP address on $</span><span style="color:#eb6772;">theinterface</span><span style="color:#9acc76;">&quot;)
+</span><span style="color:#9acc76;">} </span><span style="color:#eb6772;">else</span><span style="color:#adb7c9;">=</span><span style="color:#9acc76;">{
+</span><span style="color:#9acc76;">   :for i from=( </span><span style="color:#cd74e8;">[</span><span style="color:#9acc76;">:len $</span><span style="color:#eb6772;">ipfresh</span><span style="color:#cd74e8;">]</span><span style="color:#9acc76;"> - 1) to=0 do={ 
+</span><span style="color:#9acc76;">      :if ( </span><span style="color:#cd74e8;">[</span><span style="color:#9acc76;">:pick $</span><span style="color:#eb6772;">ipfresh </span><span style="color:#9acc76;">$</span><span style="color:#eb6772;">i</span><span style="color:#cd74e8;">]</span><span style="color:#9acc76;"> = &quot;/&quot;) do={ 
+</span><span style="color:#9acc76;">    :set ipfresh </span><span style="color:#cd74e8;">[</span><span style="color:#9acc76;">:pick $</span><span style="color:#eb6772;">ipfresh</span><span style="color:#9acc76;"> 0 $</span><span style="color:#eb6772;">i</span><span style="color:#cd74e8;">]
+</span><span style="color:#9acc76;">      } 
+</span><span style="color:#9acc76;">}
+</span><span style="color:#9acc76;"> 
+</span><span style="color:#9acc76;">:if ($</span><span style="color:#eb6772;">ipddns</span><span style="color:#9acc76;"> != $</span><span style="color:#eb6772;">ipfresh</span><span style="color:#9acc76;">) do={
+</span><span style="color:#9acc76;">   :log info (&quot;OVHDynDNS: $</span><span style="color:#eb6772;">ovhddnshost</span><span style="color:#9acc76;"> DNS RECORD IP = $</span><span style="color:#eb6772;">ipddns</span><span style="color:#9acc76;">&quot;)
+</span><span style="color:#9acc76;">   :log info (&quot;OVHDynDNS: $</span><span style="color:#eb6772;">theinterface</span><span style="color:#9acc76;"> CURRENT IP = $</span><span style="color:#eb6772;">ipfresh</span><span style="color:#9acc76;">&quot;)
+</span><span style="color:#9acc76;">   :log info (&quot;OVHDynDNS: UPDATING $</span><span style="color:#eb6772;">ovhddnshost</span><span style="color:#9acc76;"> -&gt; $</span><span style="color:#eb6772;">ipfresh</span><span style="color:#9acc76;">&quot;)
+</span><span style="color:#9acc76;">   :local str &quot;nic/update?system=dyndns&amp;hostname=$</span><span style="color:#eb6772;">ovhddnshost</span><span style="color:#9acc76;">&amp;myip=$</span><span style="color:#eb6772;">ipfresh</span><span style="color:#9acc76;">&amp;wildcard=OFF&amp;backmx=NO&amp;mx=NOCHG&quot;
+</span><span style="color:#9acc76;">
+</span><span style="color:#9acc76;">   /tool fetch address=www.ovh.com host=www.ovh.com src-path=$</span><span style="color:#eb6772;">str</span><span style="color:#9acc76;"> mode=https user=$</span><span style="color:#eb6772;">ovhddnsuser</span><span style="color:#9acc76;"> password=$</span><span style="color:#eb6772;">ovhddnspass</span><span style="color:#9acc76;"> dst-path=(&quot;/disk1/OVHDynDNS.&quot;.$</span><span style="color:#eb6772;">ovhddnshost</span><span style="color:#9acc76;">)
+</span><span style="color:#9acc76;">   :delay 1
+</span><span style="color:#9acc76;">
+</span><span style="color:#9acc76;">   :local ovhresult </span><span style="color:#cd74e8;">[</span><span style="color:#9acc76;">/file get &quot;OVHDynDNS.$</span><span style="color:#eb6772;">ovhddnshost</span><span style="color:#9acc76;">&quot; contents</span><span style="color:#cd74e8;">]
+</span><span style="color:#9acc76;">   :log info &quot;OVHDynDNS: OVH response: $</span><span style="color:#eb6772;">ovhresult</span><span style="color:#9acc76;">&quot;
+</span><span style="color:#9acc76;">
+</span><span style="color:#9acc76;">   :local str </span><span style="color:#cd74e8;">[</span><span style="color:#9acc76;">/file find name=&quot;OVHDynDNS.$</span><span style="color:#eb6772;">ovhddnshost</span><span style="color:#9acc76;">&quot;</span><span style="color:#cd74e8;">]
+</span><span style="color:#9acc76;">   /file remove $</span><span style="color:#eb6772;">str
+</span><span style="color:#9acc76;">   
+</span><span style="color:#9acc76;">   :if ($</span><span style="color:#eb6772;">ovhresult</span><span style="color:#9acc76;"> = &quot;good $</span><span style="color:#eb6772;">ipfresh</span><span style="color:#9acc76;">\n&quot; ) do={
+</span><span style="color:#9acc76;">      :log info &quot;OVHDynDNS: SUCCESS&quot;
+</span><span style="color:#9acc76;">   } else={
+</span><span style="color:#9acc76;">       :log info &quot;OVHDynDNS: FAILED&quot;
+</span><span style="color:#9acc76;">   }
+</span><span style="color:#9acc76;">
+</span><span style="color:#9acc76;">   :local ipddns $</span><span style="color:#eb6772;">ipfresh
+</span><span style="color:#9acc76;">   :log info &quot;OVHDynDNS: $</span><span style="color:#eb6772;">ovhddnshost</span><span style="color:#9acc76;"> DNS RECORD = $</span><span style="color:#eb6772;">ipfresh</span><span style="color:#9acc76;">!&quot;
+</span><span style="color:#9acc76;">    } else={
+</span><span style="color:#9acc76;">     :log info &quot;OVHDynDNS: it works!&quot;
+</span><span style="color:#9acc76;">    }
+</span><span style="color:#9acc76;">}
+</span></code></pre>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by Patryk Guba
+                
+                
+                    
+                    in <a href="https://patryk.guba.pl/categories/mikrotik/">Mikrotik</a>
+                
+                
+                    and
+                    tagged
+                    
+                        <a href="https://patryk.guba.pl/tags/code/">code</a>
+                        
+                            
+                                
+                                    ,
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/mikrotik/">mikrotik</a>
+                        
+                            
+                                
+                                    ,
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/network/">network</a>
+                        
+                            
+                                
+                                    and
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/dns/">dns</a>
+                        
+                            
+                        
+                    
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+
+  <!-- optional scripts -->
+  
+  
+  <script src="https://patryk.guba.pl/js/codeblock.js"></script>
+  
+
+  
+<!-- MathJax script for rendering LaTeX math equations -->
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [
+        ["$", "$"],
+        ["\\(", "\\)"],
+      ],
+      displayMath: [
+        ["$$", "$$"],
+        ["\\[", "\\]"],
+      ],
+    },
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+
+
+  
+<script type="text/javascript" src="https://patryk.guba.pl/elasticlunr.min.js"></script>
+<script type="text/javascript" src="https://patryk.guba.pl/js/search.js"></script>
+
+
+  
+</body>
+
+</html>
