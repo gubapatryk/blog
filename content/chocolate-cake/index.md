@@ -11,15 +11,15 @@ Chocolate cake recipe I baked this Saturday, it was so good I wanted to share it
 <!-- more -->
 {{ responsive(src="cake.jpg", width=690, height=400, alt="Chocolate cake!") }}
 
-200 g flour
-300 g sugar
-7 eggs
-1 small cup of cocoa powder (espresso cup size)
-1 small cup of boiling water (espresso cup size)
-1 small cup of vegetable oil (espresso cup size)
-3 teaspoons baking powder
-1 teaspoon vanilla extract
-1 pinch of salt
+- 200 g flour
+- 300 g sugar
+- 7 eggs
+- 1 small cup of cocoa powder (espresso cup size)
+- 1 small cup of boiling water (espresso cup size)
+- 1 small cup of vegetable oil (espresso cup size)
+- 3 teaspoons baking powder
+- 1 teaspoon vanilla extract
+- 1 pinch of salt
 
 Instructions:
 
