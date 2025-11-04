@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  
+  <meta name="description" content="Tech posts you wouldn&#x27;t find anywhere else!" />
+  
+  
+
+  <title>
+    
+    IPFIX monitoring with Docker ELK dashboards
+    
+</title>
+  <link rel="alternate" type="application/atom+xml" title="Patryk Guba Atom Feed" href="https://patryk.guba.pl/atom.xml" />
+
+  
+  <link rel="stylesheet" href="https://patryk.guba.pl/site.css">
+  
+
+  
+  
+</head>
+
+<body class="hack dark main container">
+  
+    
+        
+  
+  <header class="nav-header">
+    <nav itemscope itemtype="http://schema.org/SiteNavigationElement" class="navbar">
+      <div class="nav-links">
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl">
+          <span itemprop="name">Home</span></a>
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl/tags">
+          <span itemprop="name">Tags</span></a>
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl/other-websites">
+          <span itemprop="name">Cool websites!</span></a>
+        
+      </div>
+    </nav>
+    
+    <div class="search-container">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="search-icon">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+      </svg>
+      <input type="text" id="search" placeholder="Search...">
+      <div class="search-results">
+        <div class="search-results__items"></div>
+      </div>
+    </div>
+    
+
+  </header>
+  
+  
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">IPFIX monitoring with Docker ELK dashboards</h1>
+        <span class="muted">
+    <svg class="icon i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>4 minute read</span>
+    <svg class="icon i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2025-03-21
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>Almost nobody needs a full-blown network monitoring stack for a home lab — but here we are. If you’re running servers, you should probably know what’s moving across your network before something else does. Using IPFIX into ELK gives you actual visibility instead of vibes, so you’re not blind to weird traffic, misconfigurations, or your own mistakes. Let’s set it up.</p>
+<span id="continue-reading"></span>
+<p>With more and more services running on my home lab, I started wondering — how would I even know if something was acting up? The pivotal point came when I bought a WiFi lamp. I realized I had no idea what it was doing on my network. Was it harmlessly checking for updates, or was it quietly exfiltrating data to some mystery server? Or maybe it will start sending 3,6GB of data per day like this LG washing machine?</p>
+<div
+  style="width: 100%; max-width: 691%; margin: 0 auto; text-align: center;">
+  <img src="lg-iot.png" alt="LG network traffic"
+    style="max-width: 100%; height: auto; max-height: 682px; object-fit: contain; display: inline-block;">
+  
+</div>
+<p>Well - I wasn’t going to just hope my devices were behaving, I needed real visibility. It was time to deploy a network monitoring dashboard. The plan was to collect packets sent by Mikrotik Traffic Flow tool to a small server in my home lab. It had to balance performance and memory usage, and avoid excessive RAM consumption - this server wasn't a beefy machine I would use for a real life SIEM, but just enough for a simple tool with one source. Among the tools that I tried, the following can be mentioned:</p>
+<ul>
+<li>Grafana and Prometheus - due to high memory and compute usage I couldn't run them stable on my server (it didn't support Docker resource constraints either)</li>
+<li>Graylog - IPFIX worked fine, but I prefer ElasticSearch over OpenSearch and GeoIP plugin didn't work perfectly with my Mikrotik IPFIX schema - I had to add some changes manually using lookup tables to for IP addresses</li>
+<li>Akvorado - it was the first time I heard about this tool and I really loved the stack and had a lot of hopes... but somehow it didn't work with my server (maybe the issue was that it required 100% of server resources to run :D), so I decided that I should go with an old beloved elastic stack</li>
+<li>ELK stack - it provides NetFlow integration by default, but can be upgraded using <a href="https://www.elastiflow.com/">ElastiFlow</a>. In this post I use default NetFlow integration provided by elastic.</li>
+</ul>
+<p>First we need to set up our Mikrotik. Go to IP &gt; Traffic Flow &gt; Targets and define a target that will receive IPFIX packets. In my example it will be an ELK Fleet Agent listening at machine with 192.168.1.10 address at port 2055. Apply those settings, go back to Traffic Flow and set "Enabled" to True. You can also select which information fields you want to send with IPFIX packets.</p>
+<div
+  style="width: 100%; max-width: 691%; margin: 0 auto; text-align: center;">
+  <img src="ipfix-mikrotik.png" alt="Mikrotik configuration"
+    style="max-width: 100%; height: auto; max-height: 682px; object-fit: contain; display: inline-block;">
+  
+</div>
+<p>Then we need to run our ELK stack. I'm using a modified docker compose configuration based on <a href="https://github.com/deviantony/docker-elk">github.com/deviantony/docker-elk</a>, with only Kibana container exposed to the local network, you can find my version <a href="https://github.com/gubapatryk/docker-elk/">here</a>.</p>
+<p>If you don't want to use 30 day trial license, you can change it to basic at <strong>elasticsearch/config/elasticsearch.yml</strong></p>
+<pre data-lang="yml" style="background-color:#2b303b;color:#6c7079;" class="language-yml "><code class="language-yml" data-lang="yml"><span style="color:#eb6772;">xpack.license.self_generated.type</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">basic
+</span></code></pre>
+<p>Change passwords at .env (or better, configure some secret manager to store them).</p>
+<p>Add port 2055:2055/udp to agent apmserver docker compose file at <strong>extensions/fleet/agent-apmserver-compose.yml</strong> to open port for Netflow</p>
+<p>First run you need to setup environment with line below:</p>
+<pre data-lang="sh" style="background-color:#2b303b;color:#6c7079;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#eb6772;">docker</span><span style="color:#abb2bf;"> compose up setup
+</span></code></pre>
+<p>After setup, you can use the line below to deploy all required containers:</p>
+<pre data-lang="sh" style="background-color:#2b303b;color:#6c7079;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#eb6772;">docker</span><span style="color:#abb2bf;"> compose</span><span style="color:#eb6772;"> -f</span><span style="color:#abb2bf;"> docker-compose.yml</span><span style="color:#eb6772;"> -f</span><span style="color:#abb2bf;"> extensions/fleet/fleet-compose.yml</span><span style="color:#eb6772;"> -f</span><span style="color:#abb2bf;"> extensions/fleet/agent-apmserver-compose.yml up</span><span style="color:#eb6772;"> -d
+</span></code></pre>
+<p>Login at http://localhost:5601/ to Kibana.</p>
+<p>Go to Management &gt; Fleet &gt; Agent Policies, choose Agent Policy APM Server
+Click "Add integration" button, find Netflow integration and fill in the form.
+Set host IP (for example listening at 0.0.0.0) and port (2055)</p>
+<p>Restart docker compose (go down, then up) if required. You should be able to see some default NetFlow dashboards.</p>
+<div
+  style="width: 100%; max-width: 1339%; margin: 0 auto; text-align: center;">
+  <img src="ipfix-dashboard.png" alt="Kibana dashboard"
+    style="max-width: 100%; height: auto; max-height: 672px; object-fit: contain; display: inline-block;">
+  
+</div>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by Patryk Guba
+                
+                
+                    
+                    in <a href="https://patryk.guba.pl/categories/devops/">DevOps</a>
+                
+                
+                    and
+                    tagged
+                    
+                        <a href="https://patryk.guba.pl/tags/ipfix/">ipfix</a>
+                        
+                            
+                                
+                                    ,
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/elastic/">elastic</a>
+                        
+                            
+                                
+                                    ,
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/network/">network</a>
+                        
+                            
+                                
+                                    ,
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/docker/">docker</a>
+                        
+                            
+                                
+                                    and
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/mikrotik/">mikrotik</a>
+                        
+                            
+                        
+                    
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+
+  <!-- optional scripts -->
+  
+  
+  <script src="https://patryk.guba.pl/js/codeblock.js"></script>
+  
+
+  
+<!-- MathJax script for rendering LaTeX math equations -->
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [
+        ["$", "$"],
+        ["\\(", "\\)"],
+      ],
+      displayMath: [
+        ["$$", "$$"],
+        ["\\[", "\\]"],
+      ],
+    },
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+
+
+  
+<script type="text/javascript" src="https://patryk.guba.pl/elasticlunr.min.js"></script>
+<script type="text/javascript" src="https://patryk.guba.pl/js/search.js"></script>
+
+
+  
+</body>
+
+</html>

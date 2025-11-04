@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  
+  <meta name="description" content="Tech posts you wouldn&#x27;t find anywhere else!" />
+  
+  
+
+  <title>
+    
+    VPN IPSec IKEv2 with Mikrotik router
+    
+</title>
+  <link rel="alternate" type="application/atom+xml" title="Patryk Guba Atom Feed" href="https://patryk.guba.pl/atom.xml" />
+
+  
+  <link rel="stylesheet" href="https://patryk.guba.pl/site.css">
+  
+
+  
+  
+</head>
+
+<body class="hack dark main container">
+  
+    
+        
+  
+  <header class="nav-header">
+    <nav itemscope itemtype="http://schema.org/SiteNavigationElement" class="navbar">
+      <div class="nav-links">
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl">
+          <span itemprop="name">Home</span></a>
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl/tags">
+          <span itemprop="name">Tags</span></a>
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl/other-websites">
+          <span itemprop="name">Cool websites!</span></a>
+        
+      </div>
+    </nav>
+    
+    <div class="search-container">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="search-icon">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+      </svg>
+      <input type="text" id="search" placeholder="Search...">
+      <div class="search-results">
+        <div class="search-results__items"></div>
+      </div>
+    </div>
+    
+
+  </header>
+  
+  
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">VPN IPSec IKEv2 with Mikrotik router</h1>
+        <span class="muted">
+    <svg class="icon i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>2 minute read</span>
+    <svg class="icon i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2025-02-13
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>Mikrotik routers are powerful devices with a lot of features for various networking needs. In this post I describe how to setup IPSec IKEv2 VPN with RouterOS, that could be used to remotely access organizational or home network.</p>
+<span id="continue-reading"></span>
+<p>Building your own home VPN might be very useful - for example if you have some PC connected to your router, you can access it anytime remotely. If your ISP provides you dynamic IP, you can use <a href="https://patryk.guba.pl/dyndns-ovh-mikrotik/">Dynamic DNS</a> to use DNS name to access your home network.</p>
+<p>We start with generating certificates.</p>
+<p>First we need to generate CA certificate - it will be used as a root certificate for server and client certificates later. The second certificate is server certificate - it will be used by the router to provide it's VPN identity. As an example domain I will use "example.org", use your own domain name here.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#eb6772;">/certificate
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> common-name=</span><span style="color:#9acc76;">&quot;My CA&quot;</span><span style="color:#abb2bf;"> name=local-ca key-size=2048 days-valid=365 key-usage=key-cert-sign,crl-sign
+</span><span style="color:#eb6772;">sign</span><span style="color:#abb2bf;"> local-ca 
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> common-name=</span><span style="color:#9acc76;">&quot;example.org&quot;</span><span style="color:#abb2bf;"> name=server-cert key-size=2048 days-valid=365 subject-alt-name=DNS:example.org key-usage=tls-server 
+</span><span style="color:#eb6772;">sign</span><span style="color:#abb2bf;"> server-cert ca=local-ca
+</span><span style="color:#abb2bf;">
+</span></code></pre>
+<p>(Note: using WebFig to provide subject-alt-name can alter the number of colons, make sure you have the right value here)</p>
+<p>Client certificate - it will be used for client authentication:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">/certificate
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> name=client-cert common-name=client.local key-size=2048 days-valid=365 key-usage=tls-client
+</span><span style="color:#eb6772;">sign</span><span style="color:#abb2bf;"> client-cert ca=local-ca
+</span><span style="color:#abb2bf;">
+</span></code></pre>
+<p>You can use WebFig to export PKCS#12 certificate file by using System &gt; Certificates section and selecting your client certificate.</p>
+<div
+  style="width: 100%; max-width: 400%; margin: 0 auto; text-align: center;">
+  <img src="assets/export-cert.png" alt="Certificate export window"
+    style="max-width: 100%; height: auto; max-height: 220px; object-fit: contain; display: inline-block;">
+  
+  <div style="margin-top: 0.5em;">
+    <p style="font-style: italic;">Certificate export window in RouterOS WebFig</p>
+  </div>
+  
+</div>
+<p>Next, configure IPSec settings. First we create an IP Pool for VPN clients.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">/ip</span><span style="color:#abb2bf;"> pool
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> name=ipsec-pool ranges=192.168.100.10-192.168.100.100
+</span></code></pre>
+<p>Mode config</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">/ip</span><span style="color:#abb2bf;"> ipsec mode-config
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> name=ikev2-modecfg address-pool=ipsec-pool address-prefix-length=32 system-dns=yes
+</span></code></pre>
+<p>(Note: adding multiple split-include addresses might not work for some clients, as they use only the first address to tunnel connections)</p>
+<p>IPSec profile</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">/ip</span><span style="color:#abb2bf;"> ipsec profile
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> name=ikev2-profile dh-group=modp2048 enc-algorithm=aes-256 hash-algorithm=sha256
+</span></code></pre>
+<p>IPSec peer</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">/ip</span><span style="color:#abb2bf;"> ipsec peer
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> name=ikev2-peer exchange-mode=ike2 passive=yes profile=ikev2-profile send-initial-contact=no
+</span></code></pre>
+<p>IPSec group</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">/ip</span><span style="color:#abb2bf;"> ipsec policy group
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> name=ikev2-group
+</span></code></pre>
+<p>IPSec proposal</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">/ip</span><span style="color:#abb2bf;"> ipsec proposal
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> name=ikev2-proposal auth-algorithms=sha256 enc-algorithms=aes-256-cbc lifetime=1h pfs-group=modp2048
+</span></code></pre>
+<p>IPSec identity</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">/ip</span><span style="color:#abb2bf;"> ipsec identity
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> auth-method=digital-signature certificate=server-cert remote-certificate=client-cert generate-policy=port-strict mode-config=ikev2-modecfg peer=ikev2-peer policy-template-group=ikev2-group match-by=certificate
+</span></code></pre>
+<p>IPSec policy</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">/ip</span><span style="color:#abb2bf;"> ipsec policy
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> group=ikev2-group template=yes dst-address=192.168.100.0/24 proposal=ikev2-proposal
+</span></code></pre>
+<p>(Note: adding bigger subnet for the ease of configuration and future modifications)</p>
+<p>After configuring IPSec setting make sure your firewall permits IPSec connections</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> action=accept chain=input protocol=ipsec-esp
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> action=accept chain=input dst-port=500 protocol=udp
+</span><span style="color:#eb6772;">add</span><span style="color:#abb2bf;"> action=accept chain=input dst-port=4500 protocol=udp
+</span></code></pre>
+<p>(Note: make sure to set those rules with adequate priority)</p>
+<p>Router configuration should be ready, so it's time to configure client devices. To setup VPN in Ubuntu, you will need to export private key and certificate from PKCS#12 file created by Mikrotik router:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#eb6772;">openssl</span><span style="color:#abb2bf;"> pkcs12</span><span style="color:#eb6772;"> -in</span><span style="color:#abb2bf;"> exported-cert.p12</span><span style="color:#eb6772;"> -out</span><span style="color:#abb2bf;"> rdt.key</span><span style="color:#eb6772;"> -nodes -nocerts
+</span><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">openssl</span><span style="color:#abb2bf;"> pkcs12</span><span style="color:#eb6772;"> -in</span><span style="color:#abb2bf;"> exported-cert.p12</span><span style="color:#eb6772;"> -out</span><span style="color:#abb2bf;"> rdt.crt</span><span style="color:#eb6772;"> -nokeys
+</span></code></pre>
+<p>Configuration in GUI:</p>
+<div
+  style="width: 100%; max-width: 580%; margin: 0 auto; text-align: center;">
+  <img src="assets/ubuntu-vpn.png" alt="Ubuntu VPN settings image"
+    style="max-width: 100%; height: auto; max-height: 800px; object-fit: contain; display: inline-block;">
+  
+  <div style="margin-top: 0.5em;">
+    <p style="font-style: italic;">VPN settings in Ubuntu Linux</p>
+  </div>
+  
+</div>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by Patryk Guba
+                
+                
+                    
+                    in <a href="https://patryk.guba.pl/categories/mikrotik/">Mikrotik</a>
+                
+                
+                    and
+                    tagged
+                    
+                        <a href="https://patryk.guba.pl/tags/code/">code</a>
+                        
+                            
+                                
+                                    ,
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/mikrotik/">mikrotik</a>
+                        
+                            
+                                
+                                    ,
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/network/">network</a>
+                        
+                            
+                                
+                                    and
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/vpn/">vpn</a>
+                        
+                            
+                        
+                    
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+
+  <!-- optional scripts -->
+  
+  
+  <script src="https://patryk.guba.pl/js/codeblock.js"></script>
+  
+
+  
+<!-- MathJax script for rendering LaTeX math equations -->
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [
+        ["$", "$"],
+        ["\\(", "\\)"],
+      ],
+      displayMath: [
+        ["$$", "$$"],
+        ["\\[", "\\]"],
+      ],
+    },
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+
+
+  
+<script type="text/javascript" src="https://patryk.guba.pl/elasticlunr.min.js"></script>
+<script type="text/javascript" src="https://patryk.guba.pl/js/search.js"></script>
+
+
+  
+</body>
+
+</html>
