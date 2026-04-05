@@ -17,7 +17,6 @@ For the dough:
 - 2.5 cups flour – 380 g
 - 1 stick of butter – 200 g
 - 2 egg yolks
-- 150 g vanilla homogenized cheese
 - 0.5 cup powdered sugar – 80 g
 - 1 tsp baking powder
 
@@ -30,7 +29,7 @@ For the apple filling:
 
 Instructions:
 
-To make the dough, place the flour, baking powder, and powdered sugar in a large bowl. Add the cream cheese and egg yolks, then cut the butter into pieces and add it as well. Knead everything together until you have a smooth dough - using your hands works best. Shape the dough into a ball, flatten it slightly, wrap it in plastic wrap or place it in a bag, and refrigerate for 30 minutes.
+To make the dough, place the flour, baking powder, and powdered sugar in a large bowl. Add the egg yolks, then cut the butter into pieces and add it as well. Knead everything together until you have a smooth dough - using your hands works best. Shape the dough into a ball, flatten it slightly, wrap it in plastic wrap or place it in a bag, and refrigerate for 30 minutes.
 
 While the dough is chilling, prepare the apple filling. Wash, peel, and quarter the apples. Remove the cores and slice the quarters into thin pieces. Place them in a pot with the honey or sugar and two tablespoons of water. Cook over medium heat, stirring with a wooden spoon, for no more than 10 minutes - just until the apples soften and begin to stick together. Stir in the cinnamon, mix well, and set aside to cool. Transferring the apples to a bowl helps them cool faster.
 
