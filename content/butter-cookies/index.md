@@ -9,8 +9,9 @@ tags = ["cookies"]
 
 Butter cookies recipe.
 
-For Madhu, who asked for this recipe.
 <!-- more -->
+For Madhu, who asked for this recipe.
+
 {{ responsive(src="pie.jpg", width=500, height=370, alt="Butter cookies") }}
 
 ## Ingredients

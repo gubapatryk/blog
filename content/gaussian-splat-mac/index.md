@@ -7,6 +7,8 @@ categories = ["Gamedev"]
 tags = ["gaussian-splat", "mac"]
 +++
 
+Make your 3D models with ease!
+
 <!-- more -->
 {{ responsive(src="pie.jpg", width=500, height=370, alt="Butter cookies") }}
 
@@ -55,7 +57,7 @@ Here should be embeded playcanvas code:
   const splat = new pc.Entity();
   app.root.addChild(splat);
 
-  const SOG_URL = "/dzik.sog";
+  const SOG_URL = "dzik.sog";
 
   app.assets.loadFromUrl(SOG_URL, "gsplat", (err, asset) => {
     if (err) {
