@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Patryk Guba - cake</title>
+    <subtitle>Tech posts you wouldn&#x27;t find anywhere else!</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://patryk.guba.pl/tags/cake/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://patryk.guba.pl"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2025-11-02T00:00:00+00:00</updated>
+    <id>https://patryk.guba.pl/tags/cake/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Apple pie recipe</title>
+        <published>2025-11-02T00:00:00+00:00</published>
+        <updated>2025-11-02T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://patryk.guba.pl/apple-pie/"/>
+        <id>https://patryk.guba.pl/apple-pie/</id>
+        
+        <summary type="html">&lt;p&gt;Apple pie recipe.&lt;&#x2F;p&gt;
+</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Chocolate cake recipe</title>
+        <published>2025-11-02T00:00:00+00:00</published>
+        <updated>2025-11-02T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://patryk.guba.pl/chocolate-cake/"/>
+        <id>https://patryk.guba.pl/chocolate-cake/</id>
+        
+        <summary type="html">&lt;p&gt;Chocolate cake recipe I baked this Saturday, it was so good I wanted to share it on my blog :D.&lt;&#x2F;p&gt;
+</summary>
+        
+    </entry>
+</feed>

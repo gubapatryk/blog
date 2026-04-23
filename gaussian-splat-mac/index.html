@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  
+  <meta name="description" content="Tech posts you wouldn&#x27;t find anywhere else!" />
+  
+  
+
+  <title>
+    
+    How to quickly create gaussian splats on your Macbook
+    
+</title>
+  <link rel="alternate" type="application/atom+xml" title="Patryk Guba Atom Feed" href="https://patryk.guba.pl/atom.xml" />
+
+  
+  <link rel="stylesheet" href="https://patryk.guba.pl/site.css">
+  
+
+  
+  
+</head>
+
+<body class="hack dark main container">
+  
+    
+        
+  
+  <header class="nav-header">
+    <nav itemscope itemtype="http://schema.org/SiteNavigationElement" class="navbar">
+      <div class="nav-links">
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl">
+          <span itemprop="name">Home</span></a>
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl/tags">
+          <span itemprop="name">Tags</span></a>
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl/other-websites">
+          <span itemprop="name">Cool websites!</span></a>
+        
+      </div>
+    </nav>
+    
+    <div class="search-container">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="search-icon">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+      </svg>
+      <input type="text" id="search" placeholder="Search...">
+      <div class="search-results">
+        <div class="search-results__items"></div>
+      </div>
+    </div>
+    
+
+  </header>
+  
+  
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">How to quickly create gaussian splats on your Macbook</h1>
+        <span class="muted">
+    <svg class="icon i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>1 minute read</span>
+    <svg class="icon i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2026-04-23
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>Make your 3D models with ease!</p>
+<span id="continue-reading"></span><div
+  style="width: 100%; max-width: 500%; margin: 0 auto; text-align: center;">
+  <img src="pie.jpg" alt="Butter cookies"
+    style="max-width: 100%; height: auto; max-height: 370px; object-fit: contain; display: inline-block;">
+  
+</div>
+<video width="640" height="360" controls>
+  <source src="supersplat.mp4" type="video/mp4">
+</video>
+<h2 id="spinny-boy">Spinny boy</h2>
+<p>Here should be embeded playcanvas code:</p>
+<div id="viewer" style="width:400px;height:300px;"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/playcanvas/2.11.8/playcanvas.min.js"></script>
+<script>
+(function () {
+
+  const container = document.getElementById("viewer");
+
+  const canvas = document.createElement("canvas");
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+  container.appendChild(canvas);
+
+  const app = new pc.Application(canvas, {
+    mouse: new pc.Mouse(canvas),
+    touch: new pc.TouchDevice(canvas)
+  });
+
+  app.setCanvasFillMode(pc.FILLMODE_NONE);
+  app.setCanvasResolution(pc.RESOLUTION_AUTO);
+  app.start();
+
+  // --- camera ---
+  const camera = new pc.Entity();
+  camera.addComponent("camera", {
+    clearColor: new pc.Color(0, 0, 0)
+  });
+  camera.setLocalPosition(0, 0, 6);
+  app.root.addChild(camera);
+
+  // --- splat entity ---
+  const splat = new pc.Entity();
+  app.root.addChild(splat);
+
+  const SOG_URL = "dzik.sog";
+
+  app.assets.loadFromUrl(SOG_URL, "gsplat", (err, asset) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+
+    splat.addComponent("gsplat", {
+      asset: asset
+    });
+  });
+
+  // --- controls ---
+  let rotX = 0;
+  let rotY = 0;
+  let dragging = false;
+
+  app.mouse.on(pc.EVENT_MOUSEDOWN, () => dragging = true);
+  app.mouse.on(pc.EVENT_MOUSEUP, () => dragging = false);
+
+  app.mouse.on(pc.EVENT_MOUSEMOVE, (e) => {
+    if (!dragging) return;
+    rotY -= e.dx * 0.2;
+    rotX -= e.dy * 0.2;
+  });
+
+  app.touch.on(pc.EVENT_TOUCHSTART, () => dragging = true);
+  app.touch.on(pc.EVENT_TOUCHEND, () => dragging = false);
+
+  app.on("update", (dt) => {
+    if (!dragging) {
+      rotY += dt * 20; // auto rotate
+    }
+
+    splat.setEulerAngles(rotX, rotY, 180);
+  });
+
+})();
+</script>
+<p>End of playcanvas component!</p>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by Patryk Guba
+                
+                
+                    
+                    in <a href="https://patryk.guba.pl/categories/gamedev/">Gamedev</a>
+                
+                
+                    and
+                    tagged
+                    
+                        <a href="https://patryk.guba.pl/tags/gaussian-splat/">gaussian-splat</a>
+                        
+                            
+                                
+                                    and
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/mac/">mac</a>
+                        
+                            
+                        
+                    
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+
+  <!-- optional scripts -->
+  
+  
+  <script src="https://patryk.guba.pl/js/codeblock.js"></script>
+  
+
+  
+<!-- MathJax script for rendering LaTeX math equations -->
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [
+        ["$", "$"],
+        ["\\(", "\\)"],
+      ],
+      displayMath: [
+        ["$$", "$$"],
+        ["\\[", "\\]"],
+      ],
+    },
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+
+
+  
+<script type="text/javascript" src="https://patryk.guba.pl/elasticlunr.min.js"></script>
+<script type="text/javascript" src="https://patryk.guba.pl/js/search.js"></script>
+
+
+  
+</body>
+
+</html>

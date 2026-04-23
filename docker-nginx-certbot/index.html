@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  
+  <meta name="description" content="Tech posts you wouldn&#x27;t find anywhere else!" />
+  
+  
+
+  <title>
+    
+    Nginx SSL with Certbot in Docker without the agonizing pain
+    
+</title>
+  <link rel="alternate" type="application/atom+xml" title="Patryk Guba Atom Feed" href="https://patryk.guba.pl/atom.xml" />
+
+  
+  <link rel="stylesheet" href="https://patryk.guba.pl/site.css">
+  
+
+  
+  
+</head>
+
+<body class="hack dark main container">
+  
+    
+        
+  
+  <header class="nav-header">
+    <nav itemscope itemtype="http://schema.org/SiteNavigationElement" class="navbar">
+      <div class="nav-links">
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl">
+          <span itemprop="name">Home</span></a>
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl/tags">
+          <span itemprop="name">Tags</span></a>
+        
+        <a itemprop="url"
+          class=""
+          href="https://patryk.guba.pl/other-websites">
+          <span itemprop="name">Cool websites!</span></a>
+        
+      </div>
+    </nav>
+    
+    <div class="search-container">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="search-icon">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+      </svg>
+      <input type="text" id="search" placeholder="Search...">
+      <div class="search-results">
+        <div class="search-results__items"></div>
+      </div>
+    </div>
+    
+
+  </header>
+  
+  
+    
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+        <h1 itemprop="headline">Nginx SSL with Certbot in Docker without the agonizing pain</h1>
+        <span class="muted">
+    <svg class="icon i-clock" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <circle cx="16" cy="16" r="14"/>
+        <path d="M16 8 L16 16 20 20"/>
+    </svg>
+    <span>2 minute read</span>
+    <svg class="icon i-edit" viewBox="0 0 32 32"
+         width="16" height="16" fill="none" stroke="currentcolor"
+         stroke-linecap="round" stroke-linejoin="round" stroke-width="6.25%">
+        <path d="M30 7 L25 2 5 22 3 29 10 27 Z M21 6 L26 11 Z M5 22 L10 27 Z"/>
+    </svg>
+
+    Published: 2025-02-27
+</span>
+    </header>
+    <div itemprop="articleBody">
+      <p>Certbot makes securing websites easier, offering a straightforward solution to obtain SSL/TLS certificates from Let's Encrypt. This has become the go-to method for many to make their websites more secure and trustworthy by encrypting HTTP traffic. However, when working in a dockerized environment, the process becomes a bit more complicated.</p>
+<span id="continue-reading"></span><div
+  style="width: 100%; max-width: 690%; margin: 0 auto; text-align: center;">
+  <img src="docker-nginx.png" alt="Dockerized Nginx with SSL"
+    style="max-width: 100%; height: auto; max-height: 400px; object-fit: contain; display: inline-block;">
+  
+</div>
+<p>In a standalone environment, Certbot handles entire process automatically. However, in a containerized setup, the issue is that Docker containers are isolated from each other and running <a href="https://hub.docker.com/r/certbot/certbot">Certbot</a> image won't configure everything automatically. While <a href="https://eff-certbot.readthedocs.io/en/latest/install.html">EFF's Certbot docs</a> suggest to generate certificates manually and place them into Nginx volume, another option is a two-phase Docker Compose deployment. The first time we run our dockerized application, we generate a certificate that will be used for further deployments. In order to run nginx without the certificate during the first run, we will need a dedicated configuration file that will run only a HTTP server on port 80.</p>
+<h3 id="first-deployment-obtaining-the-certificate">First deployment - obtaining the certificate</h3>
+<p>In this phase we will create a temporary Nginx server to handle acme-challenges during certificate generation.</p>
+<p><strong>./nginx/templates-gencert/default.conf.template</strong></p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">server </span><span style="color:#abb2bf;">{
+</span><span style="color:#abb2bf;">    listen </span><span style="color:#cd74e8;">[</span><span style="color:#abb2bf;">::</span><span style="color:#cd74e8;">]</span><span style="color:#abb2bf;">:80;
+</span><span style="color:#abb2bf;">    listen 80;
+</span><span style="color:#abb2bf;">    server_name $</span><span style="color:#eb6772;">DOMAIN_NAME</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">    location </span><span style="color:#eb6772;">~</span><span style="color:#abb2bf;">/.well-known/acme-challenge {
+</span><span style="color:#abb2bf;">        allow all;
+</span><span style="color:#abb2bf;">        root /var/www/certbot;
+</span><span style="color:#abb2bf;">    }
+</span><span style="color:#abb2bf;">}
+</span></code></pre>
+<p><strong>./docker-compose-gencert.yml</strong></p>
+<pre data-lang="yml" style="background-color:#2b303b;color:#6c7079;" class="language-yml "><code class="language-yml" data-lang="yml"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">services</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">  </span><span style="color:#eb6772;">nginx</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">container_name</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">nginx
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">image</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">nginx:latest
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">environment</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">DOMAIN_NAME
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">ports</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">80:80
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">volumes</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">./nginx/templates-gencert:/etc/nginx/templates:ro
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">./certbot/letsencrypt:/etc/letsencrypt:ro
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">./certbot/data:/var/www/certbot:ro
+</span><span style="color:#abb2bf;">  </span><span style="color:#eb6772;">certbot</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">container_name</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">certbot
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">image</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">certbot/certbot:latest
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">depends_on</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">nginx
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">command</span><span style="color:#abb2bf;">: </span><span style="color:#cd74e8;">&gt;</span><span style="background-color:#e05252;color:#ffffff;"> </span><span style="color:#abb2bf;">
+</span><span style="color:#9acc76;">             certonly --reinstall --webroot --webroot-path=/var/www/certbot
+</span><span style="color:#9acc76;">             --email ${EMAIL} --agree-tos --no-eff-email
+</span><span style="color:#9acc76;">             -d ${DOMAIN_NAME}
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">volumes</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">./certbot/letsencrypt:/etc/letsencrypt:rw
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">./certbot/data:/var/www/certbot:rw
+</span></code></pre>
+<p>By running <strong>docker compose up</strong> we can generate a certificate for a domain specified as <strong>DOMAIN_NAME</strong> environment variable (environment variables can be set using <strong>.env</strong> file). After successful certificate generation, we can proceed to the normal deployment scripts.</p>
+<p><strong>/nginx/templates/default.conf.template</strong></p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">server </span><span style="color:#abb2bf;">{
+</span><span style="color:#abb2bf;">    listen </span><span style="color:#cd74e8;">[</span><span style="color:#abb2bf;">::</span><span style="color:#cd74e8;">]</span><span style="color:#abb2bf;">:80;
+</span><span style="color:#abb2bf;">    listen 80;
+</span><span style="color:#abb2bf;">    server_name $</span><span style="color:#eb6772;">DOMAIN_NAME</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">    return 301 https://$</span><span style="color:#eb6772;">host</span><span style="color:#abb2bf;">$</span><span style="color:#eb6772;">request_uri</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">}
+</span><span style="color:#abb2bf;"> 
+</span><span style="color:#eb6772;">server </span><span style="color:#abb2bf;">{
+</span><span style="color:#abb2bf;">    listen </span><span style="color:#cd74e8;">[</span><span style="color:#abb2bf;">::</span><span style="color:#cd74e8;">]</span><span style="color:#abb2bf;">:443 ssl;
+</span><span style="color:#abb2bf;">    listen 443 ssl;
+</span><span style="color:#abb2bf;">    server_name $</span><span style="color:#eb6772;">DOMAIN_NAME</span><span style="color:#abb2bf;">; 
+</span><span style="color:#abb2bf;"> 
+</span><span style="color:#abb2bf;">    ssl_certificate /etc/letsencrypt/live/$</span><span style="color:#eb6772;">DOMAIN_NAME</span><span style="color:#abb2bf;">/fullchain.pem;
+</span><span style="color:#abb2bf;">    ssl_certificate_key /etc/letsencrypt/live/$</span><span style="color:#eb6772;">DOMAIN_NAME</span><span style="color:#abb2bf;">/privkey.pem;
+</span><span style="color:#abb2bf;"> 
+</span><span style="color:#abb2bf;">    location </span><span style="color:#eb6772;">~</span><span style="color:#abb2bf;"> /.well-known/acme-challenge {
+</span><span style="color:#abb2bf;">        allow all;
+</span><span style="color:#abb2bf;">        root /var/www/certbot;
+</span><span style="color:#abb2bf;">    }
+</span><span style="color:#abb2bf;"> 
+</span><span style="color:#abb2bf;">    location / {
+</span><span style="color:#abb2bf;">      proxy_set_header X-Forwarded-For $</span><span style="color:#eb6772;">proxy_add_x_forwarded_for</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">      proxy_set_header X-Real-IP $</span><span style="color:#eb6772;">remote_addr</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">      proxy_set_header X-Forwarded-Host $</span><span style="color:#eb6772;">host</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">      proxy_set_header X-Forwarded-Proto https;
+</span><span style="color:#abb2bf;">      proxy_pass http://backend:3000;
+</span><span style="color:#abb2bf;">  }
+</span><span style="color:#abb2bf;">}
+</span></code></pre>
+<p><strong>./docker-compose.yml</strong></p>
+<pre data-lang="yml" style="background-color:#2b303b;color:#6c7079;" class="language-yml "><code class="language-yml" data-lang="yml"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">services</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">  
+</span><span style="color:#abb2bf;">  </span><span style="color:#eb6772;">nginx</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">container_name</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">nginx
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">image</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">nginx:latest
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">restart</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">always
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">environment</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">DOMAIN_NAME
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">ports</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">80:80
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">443:443
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">volumes</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">./nginx/templates:/etc/nginx/templates:ro
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">./certbot/letsencrypt:/etc/letsencrypt:ro
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">./certbot/data:/var/www/certbot:ro
+</span><span style="color:#abb2bf;">      
+</span><span style="color:#abb2bf;">  </span><span style="color:#eb6772;">backend</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">build</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">./backend
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">restart</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">always
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">container_name</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">backend
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">env_file</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">.env
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">  </span><span style="color:#eb6772;">certbot</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">container_name</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">certbot
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">image</span><span style="color:#abb2bf;">: </span><span style="color:#9acc76;">certbot/certbot:latest
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">depends_on</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">nginx
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">command</span><span style="color:#abb2bf;">: </span><span style="color:#cd74e8;">&gt;
+</span><span style="color:#9acc76;">             certonly --reinstall --webroot --webroot-path=/var/www/certbot
+</span><span style="color:#9acc76;">             --email ${EMAIL} --agree-tos --no-eff-email
+</span><span style="color:#9acc76;">             -d ${DOMAIN_NAME}
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">volumes</span><span style="color:#abb2bf;">:
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">./certbot/letsencrypt:/etc/letsencrypt:rw
+</span><span style="color:#abb2bf;">      - </span><span style="color:#9acc76;">./certbot/data:/var/www/certbot:rw
+</span></code></pre>
+<p>The file tree of the entire deployment code, both for certificate generation and normal deployment, with a sample Node.js app.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">├──</span><span style="color:#abb2bf;"> backend
+</span><span style="color:#eb6772;">│</span><span style="color:#abb2bf;">   ├── Dockerfile
+</span><span style="color:#eb6772;">│</span><span style="color:#abb2bf;">   ├── package.json
+</span><span style="color:#eb6772;">│</span><span style="color:#abb2bf;">   └── server.js
+</span><span style="color:#eb6772;">├──</span><span style="color:#abb2bf;"> docker-compose-gencert.yml
+</span><span style="color:#eb6772;">├──</span><span style="color:#abb2bf;"> docker-compose.yml
+</span><span style="color:#eb6772;">└──</span><span style="color:#abb2bf;"> nginx
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">├──</span><span style="color:#abb2bf;"> templates
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">│</span><span style="color:#abb2bf;">   └── default.conf.template
+</span><span style="color:#abb2bf;">    </span><span style="color:#eb6772;">└──</span><span style="color:#abb2bf;"> templates-gencert
+</span><span style="color:#abb2bf;">        </span><span style="color:#eb6772;">└──</span><span style="color:#abb2bf;"> default.conf.template
+</span></code></pre>
+<p>To renew certificates you can use the commands below. They can be placed at crontab to periodically check for renewal:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#6c7079;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#abb2bf;">
+</span><span style="color:#eb6772;">docker-compose -f</span><span style="color:#abb2bf;"> docker-compose.yml run</span><span style="color:#eb6772;"> --rm</span><span style="color:#abb2bf;"> certbot
+</span><span style="color:#eb6772;">docker-compose -f</span><span style="color:#abb2bf;"> docker-compose.yml exec nginx nginx</span><span style="color:#eb6772;"> -s</span><span style="color:#abb2bf;"> reload
+</span></code></pre>
+
+    </div>
+
+    
+        <footer>
+            <hr>
+            <p>
+                
+                    Published by Patryk Guba
+                
+                
+                    
+                    in <a href="https://patryk.guba.pl/categories/devops/">DevOps</a>
+                
+                
+                    and
+                    tagged
+                    
+                        <a href="https://patryk.guba.pl/tags/nginx/">nginx</a>
+                        
+                            
+                                
+                                    ,
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/ssl/">ssl</a>
+                        
+                            
+                                
+                                    ,
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/network/">network</a>
+                        
+                            
+                                
+                                    and
+                                
+                            
+                        
+                    
+                        <a href="https://patryk.guba.pl/tags/docker/">docker</a>
+                        
+                            
+                        
+                    
+                
+            </p>
+            
+            
+        </footer>
+    
+</article>
+
+
+
+  <!-- optional scripts -->
+  
+  
+  <script src="https://patryk.guba.pl/js/codeblock.js"></script>
+  
+
+  
+<!-- MathJax script for rendering LaTeX math equations -->
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [
+        ["$", "$"],
+        ["\\(", "\\)"],
+      ],
+      displayMath: [
+        ["$$", "$$"],
+        ["\\[", "\\]"],
+      ],
+    },
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+
+
+  
+<script type="text/javascript" src="https://patryk.guba.pl/elasticlunr.min.js"></script>
+<script type="text/javascript" src="https://patryk.guba.pl/js/search.js"></script>
+
+
+  
+</body>
+
+</html>

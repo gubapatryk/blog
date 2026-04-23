@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Patryk Guba - mac</title>
+    <subtitle>Tech posts you wouldn&#x27;t find anywhere else!</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://patryk.guba.pl/tags/mac/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://patryk.guba.pl"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2026-04-23T00:00:00+00:00</updated>
+    <id>https://patryk.guba.pl/tags/mac/atom.xml</id>
+    <entry xml:lang="en">
+        <title>How to quickly create gaussian splats on your Macbook</title>
+        <published>2026-04-23T00:00:00+00:00</published>
+        <updated>2026-04-23T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://patryk.guba.pl/gaussian-splat-mac/"/>
+        <id>https://patryk.guba.pl/gaussian-splat-mac/</id>
+        
+        <summary type="html">&lt;p&gt;Make your 3D models with ease!&lt;&#x2F;p&gt;
+</summary>
+        
+    </entry>
+</feed>
